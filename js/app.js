@@ -1,13 +1,15 @@
 'use script';
 
-var parentElement = document.getElementById('products');
-
-var parentForm = document.getElementById('rounds');
-
+var uniqueIndexArray = [];
 var allProducts = [];
 
-var clickingRounds = 25;
+var parentElement = document.getElementById('products');
+var lastViewed = [];
 
+var totalVotes = 0;
+var names = [];
+var votes = [];
+var views = [];
 
 //Constructor Function
 function OurProducts (src, alt, title ){
@@ -19,6 +21,17 @@ function OurProducts (src, alt, title ){
   allProducts.push(this);
 
 }
+OurProducts.prototype.busMall = function(){
+
+  var imageElement = document.createElement('img');
+  imageElement.setAttribute('src', this.filePath);
+
+  imageElement.setAttribute('alt', this.alt);
+
+  imageElement.setAttribute('title', this.title);
+
+  parentElement.appendChild(imageElement);
+};
 
 new OurProducts('images/bag.jpg','bag','Bag');
 new OurProducts('images/banana.jpg','banana','Banana');
@@ -41,95 +54,215 @@ new OurProducts('images/usb.gif','usb','Usb');
 new OurProducts('images/water-can.jpg','water-can','Water can');
 new OurProducts('images/wine-glass.jpg','wine-glass','Wine glass');
 
-OurProducts.prototype.busMall = function(){
-  var imageElement = document.createElement('img');
-
-  imageElement.setAttribute('src', this.filePath);
-
-  imageElement.setAttribute('alt', this.alt);
-
-  imageElement.setAttribute('title', this.title);
-
-  parentElement.appendChild(imageElement);
-};
-
-// HELPER function
-function randomNumber(min=0, max){
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
 
 //render 3 random images to the DOM from an array of images.
-function getRandomProducts(){
+function getRandomIndex(){
+
+  var index = getRandomNumber(allProducts.length);
+
+  while(uniqueIndexArray.includes(index)){
+    index = getRandomNumber(allProducts.length);
+  }
+  uniqueIndexArray.push(index);
+
+  if(uniqueIndexArray.length > 6){
+    uniqueIndexArray.shift();
+  }
+  
+  while(lastViewed.includes(index)){
+    index = getRandomNumber(allProducts.length);
+  }
+  lastViewed.push(index);
+  if(lastViewed.length > 6){
+    lastViewed.shift();
+  }
+  return index;
+}
+// HELPER function
+function getRandomNumber(max){
+  return Math.floor(Math.random() * max);
+}
+
+function displayImage(){
+  var index = getRandomIndex();
+  allProducts[index].busMall();
+}
+
+function handleClick(event){
+  //first, empty everything out
   parentElement.textContent = '';
 
-  //call my random number function to get a random index position. that is my random index position for my allProducts array.
-  var firstRandomIndex = randomNumber(0, allProducts.length-1);
-  var secondRandomIndex = randomNumber(0, allProducts.length-1);
-  var thirdRandomIndex = randomNumber(0, allProducts.length-1);
+  //figure out what was clicked
+  var titleOfWhatWasClicked = event.target.title;
 
-  while(firstRandomIndex === secondRandomIndex){
-  //get 2 more images
-  //we will only brake out of this loop once the third random index is different than the first and second one random index.
-    secondRandomIndex = randomNumber(0, allProducts.length-1);
-  }
-  while(secondRandomIndex === thirdRandomIndex || secondRandomIndex === firstRandomIndex){
-    thirdRandomIndex = randomNumber(0, allProducts.length-1);
-  }
-
-//use that object instance to call the busMall function.
-  allProducts[firstRandomIndex].busMall();
-  allProducts[firstRandomIndex].views++;
-
-  allProducts[secondRandomIndex].busMall();
-  allProducts[secondRandomIndex].views++;
-
-  allProducts[thirdRandomIndex].busMall();
-  allProducts[thirdRandomIndex].views++;
-
-}
-
-getRandomProducts();
-
-//function handleClick() {
-//    //figure out what product was clicked on
-//    //increment the vote on that product
-//    //call the getRandomProducts function to generate new products to the page
-// }
-function dataChart(){
-  var parentSelector = document.getElementById('chart');
-  var listParent = document.createElement('ul');
-  parentSelector.appendChild(listParent);
-  for(var i=0; i< allProducts.length; i++){
-    var listProducts = document.createElement('li');
-    listProducts.textContent = `${allProducts[i].title} had ${allProducts[i].votes} votes and it showed ${allProducts[i].views} times.`;
-    listParent.appendChild(listProducts);
-  }
-}
-
-
-//Set an Event Listener
-parent.addEventListener('click', function handler(){
-  var productClickedOn = event.target.title;
-
+  //loop through all of my object instance to compare titles so that I can find the one that was clicked on
   for(var i=0; i<allProducts.length; i++){
-    if(productClickedOn === allProducts[i].title){
+    if(titleOfWhatWasClicked === allProducts[i].title){
+
       allProducts[i].votes++;
+      totalVotes++;
+
+      if(totalVotes === 25){
+        //turn off event listener
+        parentElement.removeEventListener('click', handleClick);
+        makeNamesArray();
+      }
     }
   }
+  displayImage();
+  displayImage();
+  displayImage();
+  //listen for a click and render new images when we hear it
+  //need to keep track of views and votes
+}
+displayImage();
+displayImage();
+displayImage();
 
-  clickingRounds--;
-  if(clickingRounds <= 0){
-    dataChart();
-    this.removeEventListener('click', handler);
+parentElement.addEventListener('click', handleClick);
+
+//only allow 25 votes
+//show results at the end
+
+//loop over all of my items and make an array of just the names of items
+function makeNamesArray(){
+  for(var i=0; i<allProducts.length; i++){
+    names.push(allProducts[i].title);
+    votes.push(allProducts[i].votes);
+    views.push(allProducts[i].views);
   }
-  getRandomProducts();
-});
 
+  generateChart();
+}
 
-parentForm.addEventListener('submit', function(event){
-  event.preventDefault();
-  var rounds = Number(event.target.roundSelect.value);
-  clickingRounds = rounds;
-  // console.log(rounds);
-});
-
+function generateChart(){
+  var ctx = document.getElementById('myChart').getContext('2d');
+  var myChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: names,
+      datasets: [{
+        label: '# of Views',
+        data: views,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)'
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)'
+        ],
+        borderWidth: 1
+      },{
+        label: '# of Votes',
+        data: votes,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)'
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
+        }]
+      }
+    }
+  });
+}
