@@ -11,7 +11,7 @@
     </header>
     <section>
       <nav>
-        <ul class="navbar">
+        <ul>
           <li>Home</li>
           <li>Products</li>
           <li>About</li>
@@ -20,27 +20,16 @@
       </nav>
     </section>
     <main>
-      <section>
-        <form id="rounds">
-          <fieldset>
-            <label>Rounds:
-              <input type="text" name="roundSelect" value="25" />
-            </label>
-            <input type="submit" name="generate" value="submit" />
-          </fieldset>
-
-        </form>
+      <section id="space">
+        
       </section>
-      <section  id="products">
-
-      </section>
-      <section id="chart">
-
-      </section>
+      <section  id="products"></section>
+      <canvas id="myChart" width="400" height="400"></canvas>
     </main>
     <footer>
 
     </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
     <script src="js/app.js"></script>
   
   </body>
