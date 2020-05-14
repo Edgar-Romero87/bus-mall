@@ -4,7 +4,9 @@ var uniqueIndexArray = [];
 var allProducts = [];
 
 var parentElement = document.getElementById('products');
-var lastViewed = [];
+var listParent = document.getElementById('lists');
+
+// var lastViewed = [];
 
 var totalVotes = 0;
 var names = [];
@@ -33,6 +35,19 @@ OurProducts.prototype.busMall = function(){
   parentElement.appendChild(imageElement);
 };
 
+function getTotals (){
+
+  var data = localStorage.getItem('votes');
+
+  if (data === null) {
+    totalVotes = 0;
+  } else {
+    var totalData = parseInt(data);
+    totalVotes = totalData;
+  }
+}
+getTotals();
+
 new OurProducts('images/bag.jpg','bag','Bag');
 new OurProducts('images/banana.jpg','banana','Banana');
 new OurProducts('images/bathroom.jpg','bathroom','Bathroom');
@@ -55,6 +70,15 @@ new OurProducts('images/water-can.jpg','water-can','Water can');
 new OurProducts('images/wine-glass.jpg','wine-glass','Wine glass');
 
 
+localStorage.setItem('bananas', JSON.stringify(allProducts));
+
+var bananasParse =JSON.parse(localStorage.getItem('bananas'));
+
+console.log(bananasParse);
+
+
+
+
 //render 3 random images to the DOM from an array of images.
 function getRandomIndex(){
 
@@ -68,16 +92,9 @@ function getRandomIndex(){
   if(uniqueIndexArray.length > 6){
     uniqueIndexArray.shift();
   }
-  
-  while(lastViewed.includes(index)){
-    index = getRandomNumber(allProducts.length);
-  }
-  lastViewed.push(index);
-  if(lastViewed.length > 6){
-    lastViewed.shift();
-  }
   return index;
 }
+
 // HELPER function
 function getRandomNumber(max){
   return Math.floor(Math.random() * max);
@@ -86,6 +103,7 @@ function getRandomNumber(max){
 function displayImage(){
   var index = getRandomIndex();
   allProducts[index].busMall();
+  allProducts[index].views++;
 }
 
 function handleClick(event){
@@ -120,9 +138,16 @@ displayImage();
 displayImage();
 
 parentElement.addEventListener('click', handleClick);
-
 //only allow 25 votes
 //show results at the end
+
+OurProducts.prototype.appendList = function(){
+  for(var i=0;i < allProducts.length; i ++){
+    var listElement = document.createElement('li');
+    listElement.textContent = `${allProducts[i].title} had ${allProducts[i].votes} votes and was shown ${allProducts[i].views} times.`;
+    listParent.appendChild(listElement);
+  }
+};
 
 //loop over all of my items and make an array of just the names of items
 function makeNamesArray(){
@@ -135,10 +160,24 @@ function makeNamesArray(){
   generateChart();
 }
 
+//Add to the local storage the votes and views data
+
+// var stringifiedVotes = JSON.stringify(votes);
+// console.log('this is JSON for votes', stringifiedVotes);
+// localStorage.setItem('votes', stringifiedVotes);
+
+// var votesFromLocalStorage = localStorage.getItem('votes');
+// console.log('votes from local storage', votesFromLocalStorage);
+
+// var votesTurnedBackIntoJavaScript = JSON.parse(votesFromLocalStorage);
+// console.log('my parsed votes', votesTurnedBackIntoJavaScript);
+
+
+
 function generateChart(){
   var ctx = document.getElementById('myChart').getContext('2d');
   var myChart = new Chart(ctx, {
-    type: 'radar',
+    type: 'bar',
     data: {
       labels: names,
       datasets: [{

@@ -17,6 +17,7 @@ h1{
 img {
   width: 250px;
   height: 250px;
+  padding-left: 50px;
 }
  
 li{
@@ -26,4 +27,9 @@ li{
 }
 canvas{
   border: 2px solid black;
+}
+#lists{
+  width: 50%;
+  text-align: center;
+  margin: 20px auto;
 }
