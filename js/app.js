@@ -1,26 +1,30 @@
+/* eslint-disable indent */
 'use script';
 
 var uniqueIndexArray = [];
 var allProducts = [];
-
 var parentElement = document.getElementById('products');
-var lastViewed = [];
-
+var listParent = document.getElementById('lists');
 var totalVotes = 0;
 var names = [];
 var votes = [];
 var views = [];
+var imagesFromLocalJString = [];
 
 //Constructor Function
-function OurProducts (src, alt, title ){
-  this.filePath = src;
+function OurProducts (url, alt, title){
+  this.filePath = url;
   this.alt = alt;
   this.title = title;
-  this.votes = 0;
-  this.views = 0;
+  this.votes = votes;
+  this.views = views;
   allProducts.push(this);
 
 }
+
+
+
+
 OurProducts.prototype.busMall = function(){
 
   var imageElement = document.createElement('img');
@@ -31,8 +35,15 @@ OurProducts.prototype.busMall = function(){
   imageElement.setAttribute('title', this.title);
 
   parentElement.appendChild(imageElement);
-};
+  //   var imageElement = document.createElement('img');
+  //   imageElement.src = this.filePath;
 
+  //   imageElement.alt = this.alt;
+
+  //   imageElement.title = this.title;
+
+  //   parentElement.appendChild(imageElement);
+};
 new OurProducts('images/bag.jpg','bag','Bag');
 new OurProducts('images/banana.jpg','banana','Banana');
 new OurProducts('images/bathroom.jpg','bathroom','Bathroom');
@@ -54,7 +65,6 @@ new OurProducts('images/usb.gif','usb','Usb');
 new OurProducts('images/water-can.jpg','water-can','Water can');
 new OurProducts('images/wine-glass.jpg','wine-glass','Wine glass');
 
-
 //render 3 random images to the DOM from an array of images.
 function getRandomIndex(){
 
@@ -68,16 +78,15 @@ function getRandomIndex(){
   if(uniqueIndexArray.length > 6){
     uniqueIndexArray.shift();
   }
-  
-  while(lastViewed.includes(index)){
-    index = getRandomNumber(allProducts.length);
-  }
-  lastViewed.push(index);
-  if(lastViewed.length > 6){
-    lastViewed.shift();
-  }
+  // select a random image from that array to render
+    // helper function to generage a random number between 0 and the length of the array
+    // render the object instance at that index to the DOM
+
+  // make sure that the images are uniqe (to each other and previous images)
+    // -- come back to this in a minute
   return index;
 }
+
 // HELPER function
 function getRandomNumber(max){
   return Math.floor(Math.random() * max);
@@ -86,6 +95,7 @@ function getRandomNumber(max){
 function displayImage(){
   var index = getRandomIndex();
   allProducts[index].busMall();
+  allProducts[index].views++;
 }
 
 function handleClick(event){
@@ -101,6 +111,10 @@ function handleClick(event){
 
       allProducts[i].votes++;
       totalVotes++;
+
+      //Save our allproducts arra into LOCAL STORAGE
+      var stringifiedallProductsArray = JSON.stringify(allProducts);
+      localStorage.setItem('items', stringifiedallProductsArray);
 
       if(totalVotes === 25){
         //turn off event listener
@@ -120,9 +134,35 @@ displayImage();
 displayImage();
 
 parentElement.addEventListener('click', handleClick);
-
 //only allow 25 votes
 //show results at the end
+
+OurProducts.prototype.appendList = function(){
+  for(var i=0;i < allProducts.length; i ++){
+    var listElement = document.createElement('li');
+    listElement.textContent = `${allProducts[i].title} had ${allProducts[i].votes} votes and was shown ${allProducts[i].views} times.`;
+    listParent.appendChild(listElement);
+  }
+  if(localStorage.getItem('imageLocal') === null){
+    console.log(allProducts);
+    var stringImages = JSON.stringify(allProducts);
+    localStorage.setItem('imageLocal', stringImages);
+  } else {
+    var imagesFromLocal = localStorage.getItem('imageLocal');
+    var stringArrayLocal = JSON.parse(imagesFromLocal);
+    imagesFromLocalJString = stringArrayLocal;
+    addViewsAndVotesLocal();
+  }
+};
+
+function addViewsAndVotesLocal(){
+  for (var i=0; i< allProducts.length; i++){
+    imagesFromLocalJString[i].views += allProducts[i].views;
+    imagesFromLocalJString[i].votes += allProducts[i].votes;
+  }
+  var updatedCount = JSON.stringify(imagesFromLocalJString);
+  localStorage.setItem('imageLocal', updatedCount);
+}
 
 //loop over all of my items and make an array of just the names of items
 function makeNamesArray(){
@@ -135,10 +175,11 @@ function makeNamesArray(){
   generateChart();
 }
 
+
 function generateChart(){
   var ctx = document.getElementById('myChart').getContext('2d');
   var myChart = new Chart(ctx, {
-    type: 'radar',
+    type: 'bar',
     data: {
       labels: names,
       datasets: [{
