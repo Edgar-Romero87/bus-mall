@@ -15,21 +15,32 @@ h1{
 
 } */
 img {
-  width: 250px;
-  height: 250px;
-  padding-left: 50px;
+  width: 220px;
+  height: 220px;
+  padding: 30px;
 }
  
 li{
+  float: right;
   display: inline;
   padding: 15px;
   padding-top: 10px;
+  background-color: cornsilk;
 }
 canvas{
-  border: 2px solid black;
+  /* border: 2px solid black; */
+  align-items: center;
+  width:400px;
+  height:400px;
 }
 #lists{
   width: 50%;
   text-align: center;
   margin: 20px auto;
+}
+
+#bus {
+  height: 130px;
+  width: 180px;
+  padding-left: 50px;
 }
